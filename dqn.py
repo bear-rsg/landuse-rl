@@ -13,11 +13,11 @@ from collections import OrderedDict, namedtuple, deque
 
 class DQN(nn.Module):
 
-    def __init__(self, state_size, hidden_size, action_size, seed):
+    def __init__(self, state_size, hidden_size, action_size):
         # weights and bias are initialized from uniform(−sqrt(k),sqrt(k)), where k=1/in_features.
         # This is similar, but not same, to Kaiming (He) uniform initialization.
         super(DQN, self).__init__()
-        self.seed = torch.manual_seed(seed)
+
         self.model = nn.Sequential(OrderedDict([
             ('fc1', nn.Linear(state_size, hidden_size)),   # input  -> hidden
             ('relu1', nn.ReLU()),
@@ -29,12 +29,11 @@ class DQN(nn.Module):
 
 
 class ReplayBuffer:
-    def __init__(self, device, buffer_size, batch_size, seed):
+    def __init__(self, device, buffer_size, batch_size):
         self.device = device
         self.memory = deque(maxlen=buffer_size)
         self.batch_size = batch_size
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
-        self.seed = random.seed(seed)
 
     def add(self, state, action, reward, next_state, done):
         e = self.experience(state, action, reward, next_state, done)
@@ -57,7 +56,7 @@ class ReplayBuffer:
 
 class Agent():
     def __init__(self, device, state_size, hidden_size, action_size, replay_memory_size=1e5, batch_size=64, gamma=0.99,
-                 learning_rate=1e-3, target_tau=2e-3, update_rate=4, seed=0):
+                 learning_rate=1e-3, target_tau=2e-3, update_rate=4):
         self.device = device
         self.state_size = state_size
         self.hidden_size = hidden_size
@@ -68,15 +67,13 @@ class Agent():
         self.learn_rate = learning_rate
         self.tau = target_tau
         self.update_rate = update_rate
-        self.seed = random.seed(seed)
 
-
-        self.network = DQN(state_size, hidden_size, action_size, seed).to(self.device)
-        self.target_network = DQN(state_size, hidden_size, action_size, seed).to(self.device)
+        self.network = DQN(state_size, hidden_size, action_size).to(self.device)
+        self.target_network = DQN(state_size, hidden_size, action_size).to(self.device)
         self.optimizer = optim.AdamW(self.network.parameters(), lr=self.learn_rate)  # or optim.SGD or optim.Adam
 
         # Replay memory
-        self.memory = ReplayBuffer(self.device, self.buffer_size, self.batch_size, self.seed)
+        self.memory = ReplayBuffer(self.device, self.buffer_size, self.batch_size)
 
         # Initialize time step (for updating every update_rate steps)
         self.t_step = 0
@@ -362,7 +359,7 @@ def main():
         print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
         print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
 
-    # random.seed(0)  # doesn't work yet
+
     num_episodes = 100
     max_num_steps_per_episode = 300
     epsilon = 1.0
@@ -376,7 +373,7 @@ def main():
     hidden_size = action_size
 
     agent = Agent(device, state_size, hidden_size, action_size, replay_memory_size=3000, batch_size=32,
-                  gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8, seed=0)
+                  gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8)
 
     train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
           scores, scores_average_window)
