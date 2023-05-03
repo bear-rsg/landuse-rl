@@ -101,7 +101,8 @@ class Agent():
         self.network.train()
 
         # Epsilon-greedy action selection
-        if random.random() > eps:
+        r = random.random()
+        if r > eps:
             # print(action_values.cpu().data.numpy())
             return valid_actions[np.argmax(action_values.cpu().data.numpy()[0][valid_actions])]
         else:
