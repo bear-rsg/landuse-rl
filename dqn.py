@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 import argparse
+import logging
+import sys
 import random
 import numpy as np
 from collections import OrderedDict, namedtuple, deque
@@ -327,19 +329,27 @@ def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', '-v', action='count', default=0, help="Verbosity level: -v INFO, -vv DEBUG")
     parser.add_argument('--seed', type=int, help="An integer to be used as seed. If skipped, current time will be used as seed")
     args = parser.parse_args()
+
+    # Configure logging (verbosity level, format etc.)
+    args.verbose = 30 - (10 * args.verbose)  # Modify the first number accordingly to enable specific levels by default
+    logging.basicConfig(stream=sys.stdout, level=args.verbose, format='%(asctime)s.%(msecs)03d %(levelname)-8s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
     # Set the seed for the random number generators
     if args.seed is not None:
         # if the user provided a seed via the --seed command line argument
         # use it both for torch and random
+        logging.info(f"Set the global seed to {args.seed}")
         random.seed(args.seed)
         torch.manual_seed(args.seed)
     else:
         # If the user didn't provide a seed, we let torch to randomly generate
         # a seed, and we also use the same for the random module.
         random.seed(torch.initial_seed())  # Set random's seed to the same as the one generated for torch
+        logging.info(f"Initial seed (both for torch and random) was set to {torch.initial_seed()}")
+
     # Get cpu or gpu device
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     print(f"Using {device} device")
