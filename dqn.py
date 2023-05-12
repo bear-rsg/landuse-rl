@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+import argparse
+import logging
+import sys
 import random
 import numpy as np
 from collections import OrderedDict, namedtuple, deque
@@ -10,11 +13,11 @@ from collections import OrderedDict, namedtuple, deque
 
 class DQN(nn.Module):
 
-    def __init__(self, state_size, hidden_size, action_size, seed):
+    def __init__(self, state_size, hidden_size, action_size):
         # weights and bias are initialized from uniform(−sqrt(k),sqrt(k)), where k=1/in_features.
         # This is similar, but not same, to Kaiming (He) uniform initialization.
         super(DQN, self).__init__()
-        self.seed = torch.manual_seed(seed)
+
         self.model = nn.Sequential(OrderedDict([
             ('fc1', nn.Linear(state_size, hidden_size)),   # input  -> hidden
             ('relu1', nn.ReLU()),
@@ -26,12 +29,11 @@ class DQN(nn.Module):
 
 
 class ReplayBuffer:
-    def __init__(self, device, buffer_size, batch_size, seed):
+    def __init__(self, device, buffer_size, batch_size):
         self.device = device
         self.memory = deque(maxlen=buffer_size)
         self.batch_size = batch_size
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
-        self.seed = random.seed(seed)
 
     def add(self, state, action, reward, next_state, done):
         e = self.experience(state, action, reward, next_state, done)
@@ -54,7 +56,7 @@ class ReplayBuffer:
 
 class Agent():
     def __init__(self, device, state_size, hidden_size, action_size, replay_memory_size=1e5, batch_size=64, gamma=0.99,
-                 learning_rate=1e-3, target_tau=2e-3, update_rate=4, seed=0):
+                 learning_rate=1e-3, target_tau=2e-3, update_rate=4):
         self.device = device
         self.state_size = state_size
         self.hidden_size = hidden_size
@@ -65,15 +67,13 @@ class Agent():
         self.learn_rate = learning_rate
         self.tau = target_tau
         self.update_rate = update_rate
-        self.seed = random.seed(seed)
 
-
-        self.network = DQN(state_size, hidden_size, action_size, seed).to(self.device)
-        self.target_network = DQN(state_size, hidden_size, action_size, seed).to(self.device)
+        self.network = DQN(state_size, hidden_size, action_size).to(self.device)
+        self.target_network = DQN(state_size, hidden_size, action_size).to(self.device)
         self.optimizer = optim.AdamW(self.network.parameters(), lr=self.learn_rate)  # or optim.SGD or optim.Adam
 
         # Replay memory
-        self.memory = ReplayBuffer(self.device, self.buffer_size, self.batch_size, self.seed)
+        self.memory = ReplayBuffer(self.device, self.buffer_size, self.batch_size)
 
         # Initialize time step (for updating every update_rate steps)
         self.t_step = 0
@@ -98,7 +98,8 @@ class Agent():
         self.network.train()
 
         # Epsilon-greedy action selection
-        if random.random() > eps:
+        r = random.random()
+        if r > eps:
             # print(action_values.cpu().data.numpy())
             return valid_actions[np.argmax(action_values.cpu().data.numpy()[0][valid_actions])]
         else:
@@ -325,6 +326,28 @@ def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, 
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', '-v', action='count', default=0, help="Verbosity level: -v INFO, -vv DEBUG")
+    parser.add_argument('--seed', type=int, help="An integer to be used as seed. If skipped, current time will be used as seed")
+    args = parser.parse_args()
+
+    # Configure logging (verbosity level, format etc.)
+    args.verbose = 30 - (10 * args.verbose)  # Modify the first number accordingly to enable specific levels by default
+    logging.basicConfig(stream=sys.stdout, level=args.verbose, format='%(asctime)s.%(msecs)03d %(levelname)-8s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    # Set the seed for the random number generators
+    if args.seed is not None:
+        # if the user provided a seed via the --seed command line argument
+        # use it both for torch and random
+        logging.info(f"Set the global seed to {args.seed}")
+        random.seed(args.seed)
+        torch.manual_seed(args.seed)
+    else:
+        # If the user didn't provide a seed, we let torch to randomly generate
+        # a seed, and we also use the same for the random module.
+        random.seed(torch.initial_seed())  # Set random's seed to the same as the one generated for torch
+        logging.info(f"Initial seed (both for torch and random) was set to {torch.initial_seed()}")
+
     # Get cpu or gpu device
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     print(f"Using {device} device")
@@ -336,7 +359,7 @@ def main():
         print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
         print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
 
-    # random.seed(0)  # doesn't work yet
+
     num_episodes = 100
     max_num_steps_per_episode = 300
     epsilon = 1.0
@@ -350,7 +373,7 @@ def main():
     hidden_size = action_size
 
     agent = Agent(device, state_size, hidden_size, action_size, replay_memory_size=3000, batch_size=32,
-                  gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8, seed=0)
+                  gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8)
 
     train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
           scores, scores_average_window)
