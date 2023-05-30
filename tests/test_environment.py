@@ -79,5 +79,30 @@ class TestVariables(MyTestCase):
                 self.expectAlmostEqual(env.variables.iloc[i, j], expected.iloc[i, j], places=5, msg=f"i={i},j={j}")
 
 
+class TestIndicators(MyTestCase):
+    def setUp(self):
+        self.env = Environment(sig_type_interval=(0, 15),
+                               sig_type_step=1,
+                               land_use_interval=(-1, 1),
+                               land_use_n_points=21,
+                               greenspace_interval=(0, 1),
+                               greenspace_n_points=11,
+                               job_type_interval=(0, 1),
+                               job_type_n_points=11,
+                               epsilon=0.001,
+                               max_air_quality=7.5,
+                               max_house_price=0.5,
+                               max_job_accessibility=0.5,
+                               max_greenspace_accessibility=0.5,
+                               seed=1,
+                               debug=True)
+
+    def test_initial_indicators_1(self):
+        expected = np.array([0.666666, 0.999, 0.0, 0.4002, 0.533333, 0.999, 0.999, 0.1008, 0.333333, 0.0, 0.999, 0.999], dtype=np.float32)
+        for i in range(expected.shape[0]):
+            self.expectAlmostEqual(self.env.indicators[i], expected[i], places=5, msg=f"{i=}")
+
+
+
 if __name__ == '__main__':
     unittest.main()
