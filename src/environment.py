@@ -120,3 +120,46 @@ class Environment():
     def get_indicators(self):
         self.indicators = self.flatten_normalise_indicators(self.eng.indicators)
 
+    def get_valid_actions(self):
+        """
+        Select the actions from the following list that if performed will not end up with
+        the corresponding variable out of bounds.
+        [sig1+, sig1-, use1+, use1-, green1+, green1-, job1+, job1-,
+         sig2+, sig2-, use2+, use2-, green2+, green2-, job2+, job2-, ... ]
+        """
+        valid_actions = []
+        for action in self.actions:
+            var_id = action // 2
+            var_row_id = var_id // 4
+            var_col_id = var_id % 4
+
+            if action % 2 == 0:
+                if self.variables.iloc[var_row_id, var_col_id] < self.variable_values[var_col_id][-1]:
+                    valid_actions.append(action)
+            elif action % 2 == 1:
+                if self.variables.iloc[var_row_id, var_col_id] > self.variable_values[var_col_id][0]:
+                    valid_actions.append(action)
+
+        return np.array(valid_actions, dtype=np.int32)
+
+    def step(self, action):
+        if action not in self.valid_actions:
+            raise ValueError(f"{action=} is invalid")
+
+        var_id = action // 2
+        var_row_id = var_id // 4
+        var_col_id = var_id % 4
+        if action % 2 == 0:
+            # the smallest element of variable_values greater than the current variable
+            next_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] > self.variables.iloc[var_row_id, var_col_id]].min()
+            self.variables.iloc[var_row_id, var_col_id] = next_variable_value
+            self.eng.change((var_row_id, var_col_id), next_variable_value)  # Update the engine
+        elif action % 2 == 1:
+            # the largest element of variable_values less than the current variable
+            prev_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] < self.variables.iloc[var_row_id, var_col_id]].max()
+            self.variables.iloc[var_row_id, var_col_id] = prev_variable_value
+            self.eng.change((var_row_id, var_col_id), prev_variable_value)  # Update the engine
+
+        self.get_indicators()
+        self.valid_actions = self.get_valid_actions()
+
