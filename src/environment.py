@@ -57,10 +57,10 @@ class Environment():
                  job_type_interval=(0, 1),
                  job_type_n_points=11,
                  epsilon=0.001,
-                 max_air_quality=1.0,
-                 max_house_price=1.0,
-                 max_job_accessibility=1.0,
-                 max_greenspace_accessibility=1.0,
+                 max_air_quality=28.0,
+                 max_house_price=9.2,
+                 max_job_accessibility=300000.0,
+                 max_greenspace_accessibility=18500000.0,
                  seed=1,
                  debug=False):
         # Create the possible values for each variable
