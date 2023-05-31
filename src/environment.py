@@ -48,6 +48,7 @@ class EngineDebug():
 
 class Environment():
     def __init__(self,
+                 target_indicators,
                  sig_type_interval=(0, 15),
                  sig_type_step=1,
                  land_use_interval=(-1, 1),
@@ -61,6 +62,7 @@ class Environment():
                  max_house_price=9.2,
                  max_job_accessibility=300000.0,
                  max_greenspace_accessibility=18500000.0,
+                 tolerance=1e-5,
                  seed=1,
                  debug=False):
         # Create the possible values for each variable
@@ -76,6 +78,7 @@ class Environment():
         self.max_greenspace_accessibility = max_greenspace_accessibility
         self.max_indicator_values = [self.max_air_quality, self.max_house_price, self.max_job_accessibility, self.max_greenspace_accessibility]
 
+        self.tolerance = tolerance
         self.debug = debug
 
         # Load the initial variables
@@ -100,9 +103,23 @@ class Environment():
         # Calculate the flattened and normalised indicators based on the current variables
         self.get_indicators()
 
+        self.target = self.flatten_normalise_indicators(target_indicators)
+        self.state = self.indicators - self.target
+        self.norm = np.linalg.norm(self.state)
+        self.done = 1 if self.norm < self.tolerance else 0
+
         # Create the actions array and calculate the valid actions
         self.actions = np.arange(self.variables.size * 2, dtype=np.int32)  # each variable +-
         self.valid_actions = self.get_valid_actions()
+
+        self.episode = {'variables': [self.variables],
+                        'indicators': [self.indicators],
+                        'valid_actions': [self.valid_actions],
+                        'state': [self.state],
+                        'done': [self.done],
+                        'norm': [self.norm],
+                        'action': [],
+                        'reward': []}
 
     def flatten_normalise_indicators(self, df):
         if df.shape[1] != len(self.max_indicator_values):
@@ -161,5 +178,16 @@ class Environment():
             self.eng.change((var_row_id, var_col_id), prev_variable_value)  # Update the engine
 
         self.get_indicators()
+        self.state = self.indicators - self.target
+        self.norm = np.linalg.norm(self.state)
+        self.done = 1 if self.norm < self.tolerance else 0
         self.valid_actions = self.get_valid_actions()
 
+
+        self.episode['variables'].append(self.variables)
+        self.episode['indicators'].append(self.indicators)
+        self.episode['valid_actions'].append(self.valid_actions)
+        self.episode['state'].append(self.state)
+        self.episode['done'].append(self.done)
+        self.episode['norm'].append(self.norm)
+        self.episode['action'].append(action)
