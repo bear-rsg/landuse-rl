@@ -1,3 +1,5 @@
-jupyterlab==3.6.3
-numpy==1.24.2
-torch==2.0.0
+demoland_engine @ git+https://github.com/martinfleis/demoland_engine@v1.0.0
+jupyterlab==3.6.*
+numpy==1.24.*
+pandas==1.5.*
+torch==2.0.*
