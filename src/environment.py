@@ -159,6 +159,13 @@ class Environment():
 
         return np.array(valid_actions, dtype=np.int32)
 
+    def get_reward(self):
+        prev_state_norm = self.episode['norm'][-2]
+        curr_state_norm = self.episode['norm'][-1]
+        reward = prev_state_norm - curr_state_norm
+
+        return reward
+
     def step(self, action):
         if action not in self.valid_actions:
             raise ValueError(f"{action=} is invalid")
@@ -191,3 +198,4 @@ class Environment():
         self.episode['done'].append(self.done)
         self.episode['norm'].append(self.norm)
         self.episode['action'].append(action)
+        self.episode['reward'].append(self.get_reward())

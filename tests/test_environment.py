@@ -265,7 +265,10 @@ class TestEpisode(MyTestCase):
         self.expectAlmostEqual(self.env.episode['norm'][1], expected_norm, places=5, msg=f"next norm")
 
         expected_done = 1
-        self.expectEqual(self.env.episode['done'][1], expected_done, msg=f"next done")
+        self.expectEqual(self.env.episode['done'][1], expected_done, msg=f"done")
+
+        expected_reward = 0.066666 - 0.0  # previous minus current state norm
+        self.expectAlmostEqual(self.env.episode['reward'][0], expected_reward, places=5, msg=f"reward")
 
 
 if __name__ == '__main__':
