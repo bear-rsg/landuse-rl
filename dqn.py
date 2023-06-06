@@ -261,7 +261,7 @@ def evaluate(agent, max_num_steps_per_episode):
 
 
 def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
-          scores, scores_average_window):
+          results, scores_average_window):
     for i_episode in range(1, num_episodes+1):
         # reset the environment
         initial_variables = np.array([1.0, 0.0, 24.0, 13.0, 7.0, 23.0, 24.0, 2.0], dtype=np.float32)
@@ -308,10 +308,10 @@ def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, 
 
 
         # Add episode score to Scores and...
-        # Calculate mean score over last 100 episodes
-        # Mean score is calculated over current episodes until i_episode > 100
-        scores.append(score)
-        average_score = np.mean(scores[i_episode-min(i_episode, scores_average_window):i_episode+1])
+        # Calculate mean score over last 'scores_average_window' episodes
+        # Mean score is calculated over current episodes until i_episode > 'scores_average_window'
+        results['scores'].append(score)
+        average_score = np.mean(results['scores'][i_episode-min(i_episode, scores_average_window):i_episode+1])
 
         # Decrease epsilon for epsilon-greedy policy by decay rate
         # Use max method to make sure epsilon doesn't decrease below epsilon_min
@@ -365,7 +365,7 @@ def main():
     epsilon = 1.0
     epsilon_min = 0.1
     epsilon_decay = 0.995
-    scores = []
+    results = {'scores': []}
     scores_average_window = 10
 
     state_size = 8
@@ -376,7 +376,7 @@ def main():
                   gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8)
 
     train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
-          scores, scores_average_window)
+          results, scores_average_window)
 
     agent2 = Agent(device, state_size, hidden_size, action_size)  # random agent, untrained
     evaluate(agent, max_num_steps_per_episode)
