@@ -20,7 +20,7 @@ class DQN(nn.Module):
 
         self.model = nn.Sequential(OrderedDict([
             ('fc1', nn.Linear(state_size, hidden_size)),   # input  -> hidden
-            ('relu1', nn.ReLU()),
+            ('relu1', nn.LeakyReLU(negative_slope=0.01)),  # or ReLU
             ('fc2', nn.Linear(hidden_size, action_size)),  # hidden -> output
         ]))
 
