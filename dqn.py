@@ -100,7 +100,6 @@ class Agent():
         # Epsilon-greedy action selection
         r = random.random()
         if r > eps:
-            # print(action_values.cpu().data.numpy())
             return valid_actions[np.argmax(action_values.cpu().data.numpy()[0][valid_actions])]
         else:
             return random.choice(valid_actions)
@@ -191,8 +190,9 @@ class Environment():
 
     def step(self, action):
         if action not in self.valid_actions:
-            print("Illegal move")
-            print("Need debugging. Check agent.act() routine")
+            logging.error("Illegal move")
+            logging.error("Need debugging. Check agent.act() routine")
+            raise ValueError(f"{action=} is invalid")
 
         var_id = action // 2
         if action % 2 == 0:
@@ -224,17 +224,16 @@ def evaluate(agent, max_num_steps_per_episode):
     target_indicators = np.array([2.5, 0.5, 10.5, 7.0, 3.5, 5.0, 11.0, 4.5], dtype=np.float32)
     env = Environment(initial_variables, target_indicators)
 
-    print(f"Target indicators:  {target_indicators}")
-    print()
+    logging.info(f"Target indicators: {target_indicators}")
 
     # get initial state of the unity environment
     state = env.episode['state'][-1]
 
     done = env.episode['done'][-1]
     if done:
-        print('Episode completed')
+        logging.info('Convergence criteria met')
 
-    print(f"Current indicators: {env.episode['indicators'][-1]}")
+    logging.info(f"Current indicators: {env.episode['indicators'][-1]}")
 
     for i_step in range(1, max_num_steps_per_episode+1):
         valid_actions = env.episode['valid_actions'][-1]
@@ -245,7 +244,7 @@ def evaluate(agent, max_num_steps_per_episode):
         # send the action to the environment
         env.step(action)
 
-        print(f"Current indicators: {env.episode['indicators'][-1]}")
+        logging.info(f"Current indicators: {env.episode['indicators'][-1]}")
 
         next_state = env.episode['state'][-1]    # get the next state
         reward = env.episode['reward'][-1]       # get the reward
@@ -257,7 +256,7 @@ def evaluate(agent, max_num_steps_per_episode):
         if done:
             break
 
-    # print(f"Target indicators: {target_indicators}")
+    # logging.info(f"Target indicators: {target_indicators}")
 
 
 def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
@@ -273,7 +272,7 @@ def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, 
 
         done = env.episode['done'][-1]
         if done:
-            print('Episode completed')
+            logging.info('Convergence criteria met')
             continue
 
         # set the initial episode score to zero.
@@ -318,11 +317,11 @@ def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, 
         epsilon = max(epsilon_min, epsilon_decay*epsilon)
 
         # (Over-) Print current average score
-        print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
+        # logging.info('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
 
         # Print average score every scores_average_window episodes
         if i_episode % scores_average_window == 0:
-            print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score))
+            logging.info('Episode {}\tAverage Score: {:.2f}'.format(i_episode, average_score))
 
 
 def main():
@@ -350,15 +349,14 @@ def main():
 
     # Get cpu or gpu device
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    print(f"Using {device} device")
+    logging.info(f"Using {device} device")
 
-    #Additional info when using cuda
-    if device.type == 'cuda':
-        print(torch.cuda.get_device_name(0))
-        print('Memory Usage:')
-        print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
-        print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
-
+    # # Additional info when using cuda
+    # if device.type == 'cuda':
+    #     logging.info(torch.cuda.get_device_name(0))
+    #     logging.info('Memory Usage:')
+    #     logging.info('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+    #     logging.info('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
 
     num_episodes = 100
     max_num_steps_per_episode = 300
