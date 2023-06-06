@@ -1,31 +1,14 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
 import argparse
 import logging
 import sys
 import random
 import numpy as np
-from collections import OrderedDict, namedtuple, deque
+from collections import namedtuple, deque
 
-
-class DQN(nn.Module):
-
-    def __init__(self, state_size, hidden_size, action_size):
-        # weights and bias are initialized from uniform(−sqrt(k),sqrt(k)), where k=1/in_features.
-        # This is similar, but not same, to Kaiming (He) uniform initialization.
-        super(DQN, self).__init__()
-
-        self.model = nn.Sequential(OrderedDict([
-            ('fc1', nn.Linear(state_size, hidden_size)),   # input  -> hidden
-            ('relu1', nn.LeakyReLU(negative_slope=0.01)),  # or ReLU
-            ('fc2', nn.Linear(hidden_size, action_size)),  # hidden -> output
-        ]))
-
-    def forward(self, state):
-        return self.model(state)
+from src.dqn import DQN
 
 
 class ReplayBuffer:

@@ -5,7 +5,7 @@ import random
 import torch
 
 from tests.mytestcase import MyTestCase
-from src.main import Agent, train
+from main import Agent, train
 
 
 class TestIntegration(MyTestCase):
