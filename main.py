@@ -48,9 +48,6 @@ def main():
     # # Additional info when using cuda
     # if device.type == 'cuda':
     #     logging.info(torch.cuda.get_device_name(0))
-    #     logging.info('Memory Usage:')
-    #     logging.info('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
-    #     logging.info('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
 
     num_episodes = 100
     max_num_steps_per_episode = 300
@@ -64,11 +61,34 @@ def main():
     action_size = state_size * 2
     hidden_size = action_size
 
+    # Initialise the agent
     agent = Agent(device, state_size, hidden_size, action_size, replay_memory_size=3000, batch_size=32,
                   gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8)
 
-    train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
-          results, scores_average_window)
+    for i_episode in range(1, num_episodes + 1):
+        # Reset the environment
+        initial_variables = np.array([1.0, 0.0, 24.0, 13.0, 7.0, 23.0, 24.0, 2.0], dtype=np.float32)
+        target_indicators = np.array([2.5, 0.5, 10.5, 7.0, 3.5, 5.0, 11.0, 4.5], dtype=np.float32)
+        env = Environment(initial_variables, target_indicators)
+
+        train(agent, env, max_num_steps_per_episode, epsilon)
+
+        # Decrease epsilon for epsilon-greedy policy by decay rate
+        # Use max method to make sure epsilon doesn't decrease below epsilon_min
+        epsilon = max(epsilon_min, epsilon_decay * epsilon)
+
+        # Calculate mean score over last 'scores_average_window' episodes
+        # Mean score is calculated over current episodes until i_episode > 'scores_average_window'
+        score = sum(env.episode['reward'])  # The score for the episode is the sum of the rewards
+        results['scores'].append(score)  # Add episode score to scores
+        average_score = np.mean(results['scores'][i_episode - min(i_episode, scores_average_window):i_episode + 1])
+
+        # (Over-) Print current average score
+        # logging.info('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
+
+        # Print average score every scores_average_window episodes
+        if i_episode % scores_average_window == 0:
+            logging.info("Episode {}\tAverage Score: {:.2f}".format(i_episode, average_score))
 
     # agent2 = Agent(device, state_size, hidden_size, action_size)  # random agent, untrained
     # evaluate(agent, max_num_steps_per_episode)
