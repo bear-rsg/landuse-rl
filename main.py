@@ -2,8 +2,10 @@ import torch
 import argparse
 import logging
 import sys
+import platform
 import random
 import numpy as np
+import pandas as pd
 
 from src.agent import Agent
 from src.toyenvironment import ToyEnvironment as Environment
@@ -123,6 +125,12 @@ def main():
     # Configure logging (verbosity level, format etc.)
     args.verbose = 30 - (10 * args.verbose)  # Modify the first number accordingly to enable specific levels by default
     logging.basicConfig(stream=sys.stdout, level=args.verbose, format='%(asctime)s.%(msecs)03d %(levelname)-8s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    # Print software versions
+    logging.debug(f'Python version: {platform.python_version()}')
+    logging.debug(f'Numpy version: {np.__version__}')
+    logging.debug(f'Pandas version: {pd.__version__}')
+    logging.debug(f'Torch version: {torch.__version__}')
 
     # Set the seed for the random number generators
     if args.seed is not None:
