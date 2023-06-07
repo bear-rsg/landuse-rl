@@ -6,10 +6,65 @@ import torch
 
 from tests.mytestcase import MyTestCase
 from src.agent import Agent
-from main import train
+from src.toyenvironment import ToyEnvironment
 
 
-class TestIntegration(MyTestCase):
+def train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
+          results):
+    for i_episode in range(1, num_episodes + 1):
+        # reset the environment
+        initial_variables = np.array([1.0, 0.0, 24.0, 13.0, 7.0, 23.0, 24.0, 2.0], dtype=np.float32)
+        target_indicators = np.array([2.5, 0.5, 10.5, 7.0, 3.5, 5.0, 11.0, 4.5], dtype=np.float32)
+        env = ToyEnvironment(initial_variables, target_indicators)
+
+        # get initial state of the unity environment
+        state = env.episode['state'][-1]
+
+        done = env.episode['done'][-1]
+        if done:
+            continue
+
+        # set the initial episode score to zero.
+        score = 0
+
+        for i_step in range(1, max_num_steps_per_episode + 1):
+            valid_actions = env.episode['valid_actions'][-1]
+
+            # determine epsilon-greedy action from current sate
+            action = agent.act(state, valid_actions, epsilon)
+
+            # send the action to the environment
+            env.step(action)
+
+            next_state = env.episode['state'][-1]    # get the next state
+            reward = env.episode['reward'][-1]       # get the reward
+            done = env.episode['done'][-1]           # see if episode has finished
+
+            #Send (S, A, R, S') info to the DQN agent for a neural network update
+            agent.step(state, action, reward, next_state, done)
+
+            # set new state to current state for determining next action
+            state = next_state
+
+            # Update episode score
+            score += reward
+
+            # If this episode is done,
+            # then exit episode loop, to begin new episode
+            if done:
+                break
+
+        # Add episode score to Scores and...
+        # Calculate mean score over last 'scores_average_window' episodes
+        # Mean score is calculated over current episodes until i_episode > 'scores_average_window'
+        results['scores'].append(score)
+
+        # Decrease epsilon for epsilon-greedy policy by decay rate
+        # Use max method to make sure epsilon doesn't decrease below epsilon_min
+        epsilon = max(epsilon_min, epsilon_decay * epsilon)
+
+
+class TestIntegrationToyEnv(MyTestCase):
     def test_integration_toy_env_1(self):
         seed = 0
         random.seed(seed)
@@ -23,7 +78,6 @@ class TestIntegration(MyTestCase):
         epsilon_min = 0.1
         epsilon_decay = 0.995
         results = {'scores': []}
-        scores_average_window = 10
 
         state_size = 8
         action_size = state_size * 2
@@ -33,7 +87,7 @@ class TestIntegration(MyTestCase):
                       gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8)
 
         train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
-              results, scores_average_window)
+              results)
 
         expected = np.array([0.192464, -0.521434, -1.714819, -0.156871, 3.559739,
                              2.080391,  3.226177,  1.994953,  3.921239, 1.467250,
@@ -57,7 +111,6 @@ class TestIntegration(MyTestCase):
         epsilon_min = 0.1
         epsilon_decay = 0.995
         results = {'scores': []}
-        scores_average_window = 10
 
         state_size = 8
         action_size = state_size * 2
@@ -67,7 +120,7 @@ class TestIntegration(MyTestCase):
                       gamma=0.99, learning_rate=1e-2, target_tau=4e-2, update_rate=8)
 
         train(agent, num_episodes, max_num_steps_per_episode, epsilon, epsilon_min, epsilon_decay,
-              results, scores_average_window)
+              results)
 
         expected = np.array([1.994953,  4.462039, 0.290524, -1.261635, 3.334650,
                              2.080391, -1.234276, 0.524406,  1.275488, 2.914929,
