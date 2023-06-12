@@ -9,7 +9,7 @@ import pandas as pd
 
 from src.agent import Agent
 from src.environment import Environment
-from src.tasks import train
+from src.tasks import train, evaluate
 
 
 def main():
@@ -158,8 +158,44 @@ def main():
         # if i_episode % scores_average_window == 0:
         #     logging.info("Episode {}\tAverage Score: {:.2f}".format(i_episode, average_score))
 
+    # Evaluate the model
+    # ==================
+    print("\nEvaluating the model...\n")
+    # Reset the environment
+    data = {'air_quality': np.array([5.5, 3.5, 4.0], dtype=np.float64),
+            'house_price': np.array([0.3996, 0.4995, 0.0], dtype=np.float64),
+            'job_accessibility': np.array([0.0, 0.4995, 0.4995], dtype=np.float64),
+            'greenspace_accessibility': np.array([0.2001, 0.0504, 0.4995], dtype=np.float64)}
+    target_indicators = pd.DataFrame(data)
+    env = Environment(target_indicators,
+                      sig_type_interval=sig_type_interval,
+                      sig_type_step=sig_type_step,
+                      land_use_interval=land_use_interval,
+                      land_use_n_points=land_use_n_points,
+                      greenspace_interval=greenspace_interval,
+                      greenspace_n_points=greenspace_n_points,
+                      job_type_interval=job_type_interval,
+                      job_type_n_points=job_type_n_points,
+                      max_air_quality=max_air_quality,
+                      max_house_price=max_house_price,
+                      max_job_accessibility=max_job_accessibility,
+                      max_greenspace_accessibility=max_greenspace_accessibility,
+                      debug=True)
     # agent2 = Agent(device, state_size, hidden_size, action_size)  # random agent, untrained
-    # evaluate(agent, max_num_steps_per_episode)
+    evaluate(agent, env, max_num_steps_per_episode)
+
+    print(f"Initial variables:\n{env.episode['variables'][0]}\n")
+    print(f"Initial indicators:\n{env.revert_flatten_normalise_indicators(env.episode['indicators'][0])}\n")
+    for i in range(len(env.episode['reward'])):
+        print(f"Step: {i + 1}")
+        change, var_row_id, var_col_id = env.action_id_1d_to_2d(env.episode['action'][i])
+        inc_or_dec = lambda x: "Increase" if x == 0 else "Decrease"
+        print(f"Action: {inc_or_dec(change)} variable in row={var_row_id} and column={var_col_id}")
+        print(f"Reward: {env.episode['reward'][i]:.2f}")
+        print(f"New variables:\n{env.episode['variables'][i + 1]}")
+        print(f"New indicators:\n{env.revert_flatten_normalise_indicators(env.episode['indicators'][i + 1])}\n")
+
+    print(f"\nTarget indicators were:\n{target_indicators}")
 
 
 if __name__ == "__main__":
