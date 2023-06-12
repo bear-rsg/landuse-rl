@@ -94,9 +94,9 @@ class Environment():
 
         # Initialize the engine
         if self.debug:
-            self.eng = EngineDebug(self.variables)
+            self.eng = EngineDebug(self.variables.copy(deep=True))
         else:
-            self.eng = Engine(self.variables, random_seed=seed)
+            self.eng = Engine(self.variables.copy(deep=True), random_seed=seed)
 
         self.n_indicators = self.eng.indicators.size  # Number of nodes in the input layer
 
@@ -173,16 +173,18 @@ class Environment():
         var_id = action // 2
         var_row_id = var_id // 4
         var_col_id = var_id % 4
+        self.new_variables = self.variables.copy(deep=True)
         if action % 2 == 0:
             # the smallest element of variable_values greater than the current variable
             next_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] > self.variables.iloc[var_row_id, var_col_id]].min()
-            self.variables.iloc[var_row_id, var_col_id] = next_variable_value
+            self.new_variables.iloc[var_row_id, var_col_id] = next_variable_value
             self.eng.change((var_row_id, var_col_id), next_variable_value)  # Update the engine
         elif action % 2 == 1:
             # the largest element of variable_values less than the current variable
             prev_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] < self.variables.iloc[var_row_id, var_col_id]].max()
-            self.variables.iloc[var_row_id, var_col_id] = prev_variable_value
+            self.new_variables.iloc[var_row_id, var_col_id] = prev_variable_value
             self.eng.change((var_row_id, var_col_id), prev_variable_value)  # Update the engine
+        self.variables = self.new_variables
 
         self.get_indicators()
         self.state = self.indicators - self.target
