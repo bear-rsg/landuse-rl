@@ -170,16 +170,14 @@ class Environment():
         if action not in self.valid_actions:
             raise ValueError(f"{action=} is invalid")
 
-        var_id = action // 2
-        var_row_id = var_id // 4
-        var_col_id = var_id % 4
+        change, var_row_id, var_col_id = self.action_id_1d_to_2d(action)
         self.new_variables = self.variables.copy(deep=True)
-        if action % 2 == 0:
+        if change == 0:  # Increase the variable with index (var_row_id, var_col_id)
             # the smallest element of variable_values greater than the current variable
             next_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] > self.variables.iloc[var_row_id, var_col_id]].min()
             self.new_variables.iloc[var_row_id, var_col_id] = next_variable_value
             self.eng.change((var_row_id, var_col_id), next_variable_value)  # Update the engine
-        elif action % 2 == 1:
+        elif change == 1:  # Decrease the variable with index (var_row_id, var_col_id)
             # the largest element of variable_values less than the current variable
             prev_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] < self.variables.iloc[var_row_id, var_col_id]].max()
             self.new_variables.iloc[var_row_id, var_col_id] = prev_variable_value
@@ -192,7 +190,6 @@ class Environment():
         self.done = 1 if self.norm < self.tolerance else 0
         self.valid_actions = self.get_valid_actions()
 
-
         self.episode['variables'].append(self.variables)
         self.episode['indicators'].append(self.indicators)
         self.episode['valid_actions'].append(self.valid_actions)
@@ -201,3 +198,19 @@ class Environment():
         self.episode['norm'].append(self.norm)
         self.episode['action'].append(action)
         self.episode['reward'].append(self.get_reward())
+
+    def action_id_1d_to_2d(self, action):
+        """
+        Input:
+            action: integer
+        Returns:
+            change: integer (0 for increase and 1 for decrease)
+            var_row_id: integer (row id of the variable to change)
+            var_col_id: integer (col id of the variable to change)
+        """
+        change = action % 2
+        var_id = action // 2
+        var_row_id = var_id // 4
+        var_col_id = var_id % 4
+
+        return change, var_row_id, var_col_id
