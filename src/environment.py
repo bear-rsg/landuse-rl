@@ -122,6 +122,15 @@ class Environment():
                         'reward': []}
 
     def flatten_normalise_indicators(self, df):
+        """
+        Convert a pandas dataframe into a flattened numpy array
+        in a row-wise fashion, i.e. if the dataframe is
+        [1 2 3
+         4 5 6]
+        then the flattened array will be [1, 2, 3, 4, 5, 6].
+        We also normalise each column by dividing with its
+        corresponding normalisation value.
+        """
         if df.shape[1] != len(self.max_indicator_values):
             raise IndexError("Check number of columns of the dataframe")
 
@@ -133,6 +142,23 @@ class Environment():
                 k += 1
 
         return arr
+
+    def revert_flatten_normalise_indicators(self, indicators):
+        """
+        From a flattened and normalised numpy array of indicators
+        go back to a 2-dimensional and not normalised pandas dataframe.
+        """
+        air_quality = indicators[0::4] * self.max_air_quality
+        house_price = indicators[1::4] * self.max_house_price
+        job_accessibility = indicators[2::4] * self.max_job_accessibility
+        greenspace_accessibility = indicators[3::4] * self.max_greenspace_accessibility
+
+        data = {'air_quality': air_quality,
+                'house_price': house_price,
+                'job_accessibility': job_accessibility,
+                'greenspace_accessibility': greenspace_accessibility}
+
+        return pd.DataFrame(data)
 
     def get_indicators(self):
         self.indicators = self.flatten_normalise_indicators(self.eng.indicators)
