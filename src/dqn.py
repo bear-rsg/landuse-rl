@@ -17,3 +17,13 @@ class DQN(nn.Module):
 
     def forward(self, state):
         return self.model(state)
+    
+    def save(save_path):
+        # Saving the model
+        torch.save(this.state_dict(), save_path)
+    
+    def load(load_path):
+        # Loading the model
+        dqn = DQN()
+        dqn.load_state_dict(torch.load(save_path))
+        return dqn
