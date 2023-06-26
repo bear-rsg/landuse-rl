@@ -6,18 +6,62 @@ import platform
 import random
 import numpy as np
 import pandas as pd
-
+import os
+import pprint
+from pathlib import Path
 from src.agent import Agent
 from src.environment import Environment
 from src.tasks import train, evaluate
 
 
-def main():
-    parser = argparse.ArgumentParser()
+DATASET_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset')
+
+def parse_args():
+    desc = "Landuse Demonstrator RL "
+    parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--verbose', '-v', action='count', default=0, help="Verbosity level: -v INFO, -vv DEBUG")
     parser.add_argument('--seed', type=int, help="An integer to be used as seed. If skipped, current time will be used as seed")
-    args = parser.parse_args()
+    #parser.add_argument('--cpu', action='store_true', help='If set, use cpu only')
+    parser.add_argument('--save_freq', type=int, default=0, help='Save network dump by every `save_freq` episode. if set to 0, save the last result only')
+    parser.add_argument('--max_episode', type=int, default=100, help='The  number of episodes to run')
+    parser.add_argument('--max_steps_episode', type=int, default=300, help='The max num steps per episode to run')
+    parser.add_argument('--batch_size', type=int, default=32, help='Total batch size')
+    parser.add_argument('--data_dir', default=DATASET_PATH, help='Path to the train/test data root directory')
+    parser.add_argument('--result_dir', type=str, default='./results', help='Path to save generated images and network dump')
+    parser.add_argument('--load', type=str, default="", help='Path to load network weights (if non-empty)')
 
+    parser.add_argument('--lr', type=float, default=0.01, help='Learning rate for system') 
+    parser.add_argument('--beta1', type=float, default=0.9, help='Adam optimizer parameter')
+    parser.add_argument('--beta2', type=float, default=0.999, help='Adam optimizer parameter')
+    parser.add_argument('--save_all_ep', type=int, default=0, help='If nonzero, save RL network dump by every episode after this episode')
+
+    args = parser.parse_args()
+    validate_args(args)
+
+    return args
+
+def validate_args(args):
+    print('validating arguments...')
+    pprint.pprint(args.__dict__)
+
+    assert args.max_episode >= 1, 'number of maxepisode must be larger than or equal to one'
+    assert args.max_steps_episode >= 1, 'number of maxsteps_episode must be larger than or equal to one'
+    assert args.batch_size >= 1, 'batch size must be larger than or equal to one'
+    
+    #if args.load != '':
+    #    assert os.path.exists(args.load), 'cannot find network dump file'
+    #assert os.path.exists(args.pretrain_dump), 'cannot find pretrained network dump file'
+    #assert os.path.exists(args.tag_dump), 'cannot find tag metadata pickle file'
+
+    data_dir_path = Path(args.data_dir)
+    assert data_dir_path.exists(), 'cannot find data root directory'
+
+    result_dir_path = Path(args.result_dir)
+    if not result_dir_path.exists():
+        result_dir_path.mkdir()
+
+def main():
+    args = parse_args()
     # Configure logging (verbosity level, format etc.)
     args.verbose = 30 - (10 * args.verbose)  # Modify the first number accordingly to enable specific levels by default
     logging.basicConfig(stream=sys.stdout, level=args.verbose, format='%(asctime)s.%(msecs)03d %(levelname)-8s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -27,7 +71,7 @@ def main():
     logging.debug(f'Numpy version: {np.__version__}')
     logging.debug(f'Pandas version: {pd.__version__}')
     logging.debug(f'Torch version: {torch.__version__}')
-
+ 
     # Set the seed for the random number generators
     if args.seed is not None:
         # if the user provided a seed via the --seed command line argument
@@ -42,8 +86,23 @@ def main():
         logging.info(f"Initial seed (both for torch and random) was set to {torch.initial_seed()}")
 
     # Get cpu or gpu device
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    logging.info(f"Using {device} device")
+
+    device =  torch.device("cpu")
+    
+    if torch.cuda.is_available():
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        device = torch.device("cuda") 
+        logging.info(torch.cuda.get_device_name(0))
+    else:
+        device = torch.device("cpu")
+        
+    logging.info(f"Using {device} device") 
+    
+    num_episodes = args.max_episode
+    max_num_steps_per_episode = args.max_steps_episode
+    learning_rate=args.lr
+    batch_size= args.batch_size
 
     # # Additional info when using cuda
     # if device.type == 'cuda':
@@ -54,9 +113,7 @@ def main():
     action_size = 3 * 4 * 2             # n_areas x n_variables_per_area x 2 (719 x 4 x 2)
     hidden_size = action_size
     replay_memory_size = 5000
-    batch_size = 32
     gamma = 0.99
-    learning_rate = 1e-3
     target_tau = 2e-3
     update_rate = 8
 
@@ -75,8 +132,7 @@ def main():
     max_greenspace_accessibility = 0.5
 
     # Training parameters
-    num_episodes = 100
-    max_num_steps_per_episode = 200
+
     epsilon = 1.0
     epsilon_min = 0.05
     epsilon_decay = 0.999
@@ -111,8 +167,10 @@ def main():
     target_indicators.append(pd.DataFrame(data))
 
     # Initialise the agent
-    agent = Agent(device, state_size, hidden_size, action_size, replay_memory_size=replay_memory_size, batch_size=batch_size,
-                  gamma=gamma, learning_rate=learning_rate, target_tau=target_tau, update_rate=update_rate)
+<<<<<<< main.py
+    agent = Agent(device, state_size, hidden_size, action_size,args.save_all_ep, args.save_freq, args.result_dir, replay_memory_size=3000, batch_size=batch_size,
+                  gamma=gamma, learning_rate=learning_rate, beta1=args.beta1, beta2=args.beta2,target_tau=target_tau , update_rate=update_rate)
+
 
     # Start the episodes loop to train
     for i_episode in range(1, num_episodes + 1):
@@ -157,6 +215,20 @@ def main():
         # # Print average score every scores_average_window episodes
         # if i_episode % scores_average_window == 0:
         #     logging.info("Episode {}\tAverage Score: {:.2f}".format(i_episode, average_score))
+
+        if i_episode >= agent.save_all_steps > 0:
+            agent.save(i_episode)
+        elif agent.save_freq > 0 and i_episode % agent.save_freq == 0:
+            agent.save(i_episode)
+
+    print("finished... save model training results")
+
+    if agent.save_freq == 0:
+        if agent.save_all_steps <= 0:
+            agent.save(i_episode)
+    testfile=agent.result_dir_path+'/agent_100_episode.pkl'
+    if os.path.isfile(Path(testfile)):
+        agent.load_test(testfile)
 
     # Evaluate the model
     # ==================

@@ -21,14 +21,14 @@ class ToyEnvironment():
                         'action': [],
                         'reward': []}
 
-    def get_indicators(self):
+    def get_indicators(self):    
         indicators = 0.5 * self.variables  # black-box here
         return indicators
 
     def get_valid_actions(self):
         """
         [var1+, var1-, var2+, var2-, ..., varN+, varN-]
-        """
+        """ 
         min_variable_val = 0.0
         max_variable_val = 24.0
 
@@ -45,14 +45,14 @@ class ToyEnvironment():
 
         return np.array(valid_actions, dtype=np.int32)
 
-    def get_reward(self):
+    def get_reward(self):    
         prev_state_norm = np.linalg.norm(self.episode['state'][-2])
         curr_state_norm = np.linalg.norm(self.episode['state'][-1])
         reward = prev_state_norm - curr_state_norm
 
         return reward
 
-    def step(self, action):
+    def step(self, action):    
         if action not in self.valid_actions:
             raise ValueError(f"{action=} is invalid (Check agent.act() routine)")
 
