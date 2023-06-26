@@ -3,4 +3,5 @@ __pycache__/
 .coverage
 .ipynb_checkpoints/
 apps/
+Output*/
 *.pkl
