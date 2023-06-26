@@ -91,19 +91,19 @@ class Agent():
         # Compute Q targets for current states
         Qsa_targets = rewards + (gamma * Qsa_prime_targets * (1 - dones))
         if not self.printedsummary: 
-            logging.info("states.shape")
-            logging.info(states.shape)
-            logging.info("actions.shape")
-            logging.info(actions.shape)
-            logging.info("rewards.shape")
-            logging.info(rewards.shape)
-            logging.info("next_states.shape")
-            logging.info(next_states.shape)
+            logging.debug("states.shape")
+            logging.debug(states.shape)
+            logging.debug("actions.shape")
+            logging.debug(actions.shape)
+            logging.debug("rewards.shape")
+            logging.debug(rewards.shape)
+            logging.debug("next_states.shape")
+            logging.debug(next_states.shape)
             logging.info(summary(self.network.model, input_size=(1, states.shape[0], states.shape[1])))
-            logging.info("Qsa.shape")
-            logging.info(Qsa.shape)
-            logging.info("Qsa_targets.shape")
-            logging.info(Qsa_targets.shape)
+            logging.debug("Qsa.shape")
+            logging.debug(Qsa.shape)
+            logging.debug("Qsa_targets.shape")
+            logging.debug(Qsa_targets.shape)
             self.printedsummary = True
             
         # Compute loss (error) 
@@ -154,9 +154,9 @@ class Agent():
             }, str(save_dir+'/agent_{}_episode.pkl'.format(save_episode)))
 
         
-        logging.info("============= save success =============")
-        logging.info("episode from {} to {}".format(self.start_episode, save_episode))
-        logging.info("save result path is {}".format(str(self.result_dir_path)))
+        logging.debug("============= save success =============")
+        logging.debug("episode from {} to {}".format(self.start_episode, save_episode))
+        logging.debug("save result path is {}".format(str(self.result_dir_path)))
     
     def load_test(self, checkpoint_path):
         checkpoint = torch.load(str(checkpoint_path))  
@@ -172,7 +172,7 @@ class Agent():
 
         self.finish_episode = self.episode + self.start_episode - 1
 
-        logging.info("============= load success =============")
-        logging.info("episode, start from {} to {}".format(self.start_episode, self.finish_episode))
-        logging.info("previous result path is {}".format(checkpoint['result_path']))
+        logging.debug("============= load success =============")
+        logging.debug("episode, start from {} to {}".format(self.start_episode, self.finish_episode))
+        logging.debug("previous result path is {}".format(checkpoint['result_path']))
 
