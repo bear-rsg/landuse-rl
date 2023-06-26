@@ -1,0 +1,36 @@
+@startuml
+title LandUse Sequence Diagram
+
+skinparam shadowing false
+skinparam actor {
+	BorderColor black
+	BackgroundColor white
+}
+
+actor Actor
+Actor -> main:call
+activate main
+main -> main :parse_args
+main -> main :validate_args
+main -> Agent :Agent 
+main <-- Agent
+main -> train
+group until max episode 
+train -> Environment:step
+          Environment -> Environment  :get_indicators
+          Environment -> Environment  :get_valid_actions
+          Environment -> Environment  :get_reward
+train <-- Environment:step
+train  -> Agent:step
+         Agent -> ReplayBuffer:add
+         Agent <-- ReplayBuffer:add
+train <-- Agent:step
+train -> Agent: act
+Agent -> DQN:forward 
+Agent <- DQN:forward
+train <-- Agent:act
+end
+train -> main
+main -> Actor: exit
+deactivate main
+@enduml

@@ -40,11 +40,11 @@ To erase previously collected coverage data run `coverage erase`.
 
 Login to baskeville:
 
- <img src="./docs/basklogin.png" alt="login-screen" width="300" /> 
+<img src="./docs/basklogin.png" alt="login-screen" width="300" /> 
  
- launch notebook:
+launch notebook:
  
- <img src="./docs/JupyterLab_launch.png" alt="Juypterlab-screen" width="300" /> 
+<img src="./docs/JupyterLab_launch.png" alt="Juypterlab-screen" width="300" /> 
  
 
 ```bash
@@ -58,8 +58,12 @@ bask_run.sh
 
 #### Classes for Python
 
-<img src="./docs/classes.png" alt="class diagram" width="300" /> 
+<img src="./docs/classes.png" alt="class diagram" width="450" /> 
 
 #### Packages for Python
 
-<img src="./docs/packages.png" alt="package diagram" width="300" /> 
+<img src="./docs/packages.png" alt="package diagram" width="450" /> 
+
+#### Sequence Diagram
+
+<img src="./docs/plantUML_Seq.png" alt="package diagram" width="450" /> 
