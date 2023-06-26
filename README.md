@@ -35,3 +35,24 @@ coverage report -m
 For a nicer presentation, use `coverage html` and open `htmlcov/index.html` in your browser.
 
 To erase previously collected coverage data run `coverage erase`.
+
+###  baskerville
+
+Login to baskeville:
+ <img src="./docs/basklogin.png" alt="login-screen" width="300" /> 
+ 
+ launch notebook:
+ <img src="./docs/JupyterLab.png" alt="Juypterlab-screen" width="300" /> 
+ 
+
+```bash
+
+cd /bask/projects/v/vjgo8416-geo-com-dem
+git clone https://gitlab.bham.ac.uk/hartleys-landuse-turing-msa-1/brainstorming.git
+
+```
+### Appendix 
+
+ UML for Python:
+ <img src="./docs/classes.png" alt="class diagram" width="300" /> 
+ <img src="./docs/packages.png" alt="package diagram" width="300" /> 
