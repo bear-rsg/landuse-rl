@@ -42,17 +42,22 @@ Login to baskeville:
  <img src="./docs/basklogin.png" alt="login-screen" width="300" /> 
  
  launch notebook:
- <img src="./docs/JupyterLab.png" alt="Juypterlab-screen" width="300" /> 
+ <img src="./docs/JupyterLab_launch.png" alt="Juypterlab-screen" width="300" /> 
  
 
 ```bash
-
-cd /bask/projects/v/vjgo8416-geo-com-dem
+ln -s /bask/projects/v/vjgo8416-geo-com-dem ~/geo-com-dem
+cd ~/geo-com-dem
 git clone https://gitlab.bham.ac.uk/hartleys-landuse-turing-msa-1/brainstorming.git
-
+cd brainstorming
+bask_run.sh
 ```
 ### Appendix 
 
- UML for Python:
- <img src="./docs/classes.png" alt="class diagram" width="300" /> 
- <img src="./docs/packages.png" alt="package diagram" width="300" /> 
+#### Classes for Python
+
+<img src="./docs/classes.png" alt="class diagram" width="300" /> 
+
+#### Packages for Python
+
+<img src="./docs/packages.png" alt="package diagram" width="300" /> 

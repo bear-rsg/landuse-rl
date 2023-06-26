@@ -184,7 +184,7 @@ function exit_abnormal() {                         # Function: Exit with error.
 ####################################### 
 function main() {
 
-    echo "odir->"${odir}
+    echo "odir->"${odir}/$(date +"%Y-%m-%d")
     echo "venv_name->"${venv_name}
     echo "checkpoints->"${checkpoints}
     echo "epochs->"${epochs}
@@ -213,7 +213,7 @@ function main() {
 #***********************************************************************
 # Do LandUse training and work
 
-    python "${PROJECTROOT}/main.py" -vv --result_dir "${odir}-${start}" --data_dir "${data_dir}" --save_freq 25
+    python "${PROJECTROOT}/main.py" -vv --result_dir "${odir}" --data_dir "${data_dir}" --save_freq 25
 
 
 #***********************************************************************
