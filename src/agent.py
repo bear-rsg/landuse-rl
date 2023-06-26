@@ -86,6 +86,7 @@ class Agent():
 
         #Double DQN
         Qsa_prime_actions = self.network(next_states).detach().max(1)[1].unsqueeze(dim=1) 
+       
         Qsa_prime_targets = self.target_network(next_states)[Qsa_prime_actions]
 
         # Compute Q targets for current states
@@ -99,15 +100,17 @@ class Agent():
             logging.debug(rewards.shape)
             logging.debug("next_states.shape")
             logging.debug(next_states.shape)
-            logging.info(summary(self.network.model, input_size=(1, states.shape[0], states.shape[1])))
+            # logging.info(summary(self.network.model, input_size=(1, states.shape[0], states.shape[1])))
             logging.debug("Qsa.shape")
             logging.debug(Qsa.shape)
             logging.debug("Qsa_targets.shape")
             logging.debug(Qsa_targets.shape)
+            logging.debug("Qsa_prime_actions.shape")
+            logging.debug(Qsa_prime_actions.shape)
             self.printedsummary = True
             
         # Compute loss (error) 
-        #loss = F.huber_loss( Qsa,Qsa_targets)  
+        #  loss = F.huber_loss( Qsa,Qsa_targets)  
         loss = F.huber_loss( Qsa.expand_as(Qsa_targets),Qsa_targets)  # or F.mse_loss
         # loss = F.mse_loss(Qsa, Qsa_targets)
 
