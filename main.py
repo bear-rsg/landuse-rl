@@ -167,7 +167,6 @@ def main():
     target_indicators.append(pd.DataFrame(data))
 
     # Initialise the agent
-<<<<<<< main.py
     agent = Agent(device, state_size, hidden_size, action_size,args.save_all_ep, args.save_freq, args.result_dir, replay_memory_size=3000, batch_size=batch_size,
                   gamma=gamma, learning_rate=learning_rate, beta1=args.beta1, beta2=args.beta2,target_tau=target_tau , update_rate=update_rate)
 
