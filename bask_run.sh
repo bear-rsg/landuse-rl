@@ -30,10 +30,10 @@ export ORANGE='\e[38;5;202m'
 export NOCOLOR='\e[0m'
 
 # Default values for command line values
-odir="${PROJECTROOT}/Output"
-checkpoints=0 
+odir="${PROJECTROOT}/Output/$(date +"%Y-%m-%dT%H-%M")"
+save_freq=0 
 venv_name="venv_landuse" 
-epochs=100
+episode_max=100
 del_env='N'
 data_dir="${PROJECTROOT}/apps/${venv_name}/lib64/python3.10/site-packages/demoland_engine/data/"    
 
@@ -146,16 +146,16 @@ function clean(){
 ####################################### 
 usage() {
   echo "USAGE"
-  echo "  $(basename $0) -o dir [-c checkpointing] [-e venv_environment]"
+  echo "  $(basename $0) -o dir [-s save_freq] [-e venv_environment]"
   echo
   echo "DESCRIPTION"
-  echo "  Create lamd use env if needed and train for p epochs model saving weights every c"
+  echo "  Create lamd use env if needed and train for p episode max model saving weights every s"
   echo 
   echo "OPTIONS                                    [DEFAULT]" 
   echo "  -o: Output directory                     [${PROJECTROOT}/Output] "
-  echo "  -c:  iterations to auto save             [0- no saveing]"
+  echo "  -s:  iterations to auto save             [0- no saveing]"
   echo "  -e: virtual environment name             [${venv_name}]"
-  echo "  -p: number epochs to train               [100]"
+  echo "  -p: number episodes max to train         [${episode_max}]"
   echo "  -d: delete env after use                 [N]"
 }
 
@@ -169,14 +169,27 @@ usage() {
 # RETURN: 
 ####################################### 
 function exit_abnormal() {                         # Function: Exit with error.
-  usage
+  usage 
   exit 1
+}
+
+#######################################
+# call_python
+# GLOBALS: PROJECTROOT, odir, data_dir, save_freq
+# ARGUMENTS:
+#   None
+# OUTPUTS:
+#   Python outputs
+# RETURN: 
+####################################### 
+function call_python() {                          
+    python "${PROJECTROOT}/main.py" -vv --result_dir "${odir}" --data_dir "${data_dir}" --save_freq "${save_freq}"
 }
 
 #######################################
 # main
 # GLOBALS:
-#   PROJECTROOT,odir,venv_name,checkpoints,epochs,del_env
+#   PROJECTROOT,odir,venv_name,checkpoints,episode_max,del_env
 # ARGUMENTS:
 #   None
 # OUTPUTS:
@@ -184,15 +197,15 @@ function exit_abnormal() {                         # Function: Exit with error.
 ####################################### 
 function main() {
 
-    echo "odir->"${odir}/$(date +"%Y-%m-%d")
+    echo "odir->"${odir}
     echo "venv_name->"${venv_name}
-    echo "checkpoints->"${checkpoints}
-    echo "epochs->"${epochs}
+    echo "save_freq->"${save_freq}
+    echo "episode_max->"${episode_max}
     echo "del_env->"${del_env}
     echo "data_dir->"${data_dir} 
     # make the output folder
     if [[ ! -e $odir ]]; then
-      mkdir ${odir}
+      mkdir -p ${odir}
     elif [[ ! -d $odir ]]; then
       echo "$odir already exists but is not a directory"
       exit_abnormal
@@ -210,13 +223,10 @@ function main() {
     
     test_venv_landuse
     
-#***********************************************************************
-# Do LandUse training and work
-
-    python "${PROJECTROOT}/main.py" -vv --result_dir "${odir}" --data_dir "${data_dir}" --save_freq 25
-
-
-#***********************************************************************
+    #***********************************************************************
+    # Do LandUse training and work
+    call_python
+    #***********************************************************************
     if [[ $del_env =~ ^[Yy]$ ]]
         then
         # do rm of env folder
@@ -238,26 +248,26 @@ function main() {
 
 [[ "$1" = -h ]] && { usage; exit; } 
 
-while getopts ":o:c:e:p:d:" opt; do
+while getopts ":o:s:e:p:d:" opt; do
   case $opt in
     o) odir=${OPTARG%/}; ;;  # Remove trailing slash if present
     e) venv_name=$OPTARG;      ;;    
     d) del_env=$OPTARG;      ;;  
-    c) 
-      checkpoints=$OPTARG                     # Set $checkpoints to specified value.
+    s) 
+      save_freq=$OPTARG                     # Set $checkpoints to specified value.
       re_isanum='^[0-9]+$'                    # Regex: match whole numbers only
-      if ! [[ $checkpoints =~ $re_isanum ]] ; then   # if $checkpoints not whole:
+      if ! [[ $save_freq =~ $re_isanum ]] ; then   # if $checkpoints not whole:
         echo "Error: checkpoints must be a positive, whole number."
         exit_abnormal                     # Exit abnormally.
       fi;      ;; 
-    p) 
-      epochs=$OPTARG                      # Set $epochs to specified value.
-      re_isanum='^[0-9]+$'                # Regex: match whole numbers only
-      if ! [[ $epochs =~ $re_isanum ]] ; then   # if $epochs not whole:
-        echo "Error: epochs must be a positive, whole number."
-        exit_abnormal                     # Exit abnormally.
-      elif [ $epochs -eq "0" ]; then       # If it's zero:
-        echo "Error: epochs must be greater than zero."
+    p)  
+      episode_max=$OPTARG                                     # Set $episode_max to specified value.
+      re_isanum='^[0-9]+$'                                    # Regex: match whole numbers only
+      if ! [[ $episode_max =~ $re_isanum ]] ; then            # if $episode_max not whole:
+        echo "Error: episode_max must be a positive, whole number."
+        exit_abnormal                                         # Exit abnormally.
+      elif [ $episode_max -eq "0" ]; then                     # If it's zero:
+        echo "Error: episode_max must be greater than zero."
       exit_abnormal                     # Exit abnormally.
       fi;      ;;
     \?) echo "Error: invalid option: -$OPTARG"; exit_abnormal          ;;

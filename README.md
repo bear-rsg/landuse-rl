@@ -39,9 +39,11 @@ To erase previously collected coverage data run `coverage erase`.
 ###  baskerville
 
 Login to baskeville:
+
  <img src="./docs/basklogin.png" alt="login-screen" width="300" /> 
  
  launch notebook:
+ 
  <img src="./docs/JupyterLab_launch.png" alt="Juypterlab-screen" width="300" /> 
  
 

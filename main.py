@@ -151,9 +151,10 @@ def main():
 
     if agent.save_freq == 0:
         if agent.save_all_steps <= 0:
-            agent.save(i_episode+1)
-    
-    agent.load_test(agent.result_dir_path+'/agent_25_episode.pkl')
+            agent.save(i_episode)
+    testfile=agent.result_dir_path+'/agent_100_episode.pkl'
+    if os.path.isfile(Path(testfile)):
+        agent.load_test(testfile)
 
 
 if __name__ == "__main__":
