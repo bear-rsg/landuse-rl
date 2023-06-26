@@ -2,6 +2,7 @@ import logging
 
 
 def train(agent, env, max_num_steps_per_episode, epsilon):
+    
     # Get initial state of the environment
     state = env.episode['state'][-1]
 

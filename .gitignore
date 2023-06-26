@@ -2,3 +2,4 @@ __pycache__/
 *.py[cod]
 .coverage
 .ipynb_checkpoints/
+apps/

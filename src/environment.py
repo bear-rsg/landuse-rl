@@ -143,7 +143,7 @@ class Environment():
         the corresponding variable out of bounds.
         [sig1+, sig1-, use1+, use1-, green1+, green1-, job1+, job1-,
          sig2+, sig2-, use2+, use2-, green2+, green2-, job2+, job2-, ... ]
-        """
+        """    
         valid_actions = []
         for action in self.actions:
             var_id = action // 2
