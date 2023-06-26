@@ -30,46 +30,36 @@ def train(agent, env, max_num_steps_per_episode, epsilon):
         # Set new state to current state for determining next action
         state = next_state
 
-        # If this episode is then exit
+        # If this episode converged then exit
         if done:
             return None
 
 
-# def evaluate(agent, max_num_steps_per_episode):
-#     initial_variables = np.array([1.0, 0.0, 24.0, 13.0, 7.0, 23.0, 24.0, 2.0], dtype=np.float32)
-#     target_indicators = np.array([2.5, 0.5, 10.5, 7.0, 3.5, 5.0, 11.0, 4.5], dtype=np.float32)
-#     env = Environment(initial_variables, target_indicators)
+def evaluate(agent, env, max_num_steps_per_episode):
+    # Get initial state of the environment
+    state = env.episode['state'][-1]
 
-#     logging.info(f"Target indicators: {target_indicators}")
+    done = env.episode['done'][-1]
+    if done:
+        logging.info('Convergence criteria met')
+        return None
 
-#     # get initial state of the unity environment
-#     state = env.episode['state'][-1]
+    for i_step in range(1, max_num_steps_per_episode + 1):
+        valid_actions = env.episode['valid_actions'][-1]
 
-#     done = env.episode['done'][-1]
-#     if done:
-#         logging.info('Convergence criteria met')
+        # Determine epsilon-greedy action from current sate
+        action = agent.act(state, valid_actions)
 
-#     logging.info(f"Current indicators: {env.episode['indicators'][-1]}")
+        # Send the action to the environment
+        env.step(action)
 
-#     for i_step in range(1, max_num_steps_per_episode+1):
-#         valid_actions = env.episode['valid_actions'][-1]
+        next_state = env.episode['state'][-1]    # get the next state
+        reward = env.episode['reward'][-1]       # get the reward
+        done = env.episode['done'][-1]           # see if episode has finished
 
-#         # determine epsilon-greedy action from current sate
-#         action = agent.act(state, valid_actions)
+        # Set new state to current state for determining next action
+        state = next_state
 
-#         # send the action to the environment
-#         env.step(action)
-
-#         logging.info(f"Current indicators: {env.episode['indicators'][-1]}")
-
-#         next_state = env.episode['state'][-1]    # get the next state
-#         reward = env.episode['reward'][-1]       # get the reward
-#         done = env.episode['done'][-1]           # see if episode has finished
-
-#         # set new state to current state for determining next action
-#         state = next_state
-
-#         if done:
-#             break
-
-#     # logging.info(f"Target indicators: {target_indicators}")
+        # If this episode converged then exit
+        if done:
+            return None
