@@ -94,9 +94,9 @@ class Environment():
 
         # Initialize the engine
         if self.debug:
-            self.eng = EngineDebug(self.variables)
+            self.eng = EngineDebug(self.variables.copy(deep=True))
         else:
-            self.eng = Engine(self.variables, random_seed=seed)
+            self.eng = Engine(self.variables.copy(deep=True), random_seed=seed)
 
         self.n_indicators = self.eng.indicators.size  # Number of nodes in the input layer
 
@@ -122,6 +122,15 @@ class Environment():
                         'reward': []}
 
     def flatten_normalise_indicators(self, df):
+        """
+        Convert a pandas dataframe into a flattened numpy array
+        in a row-wise fashion, i.e. if the dataframe is
+        [1 2 3
+         4 5 6]
+        then the flattened array will be [1, 2, 3, 4, 5, 6].
+        We also normalise each column by dividing with its
+        corresponding normalisation value.
+        """
         if df.shape[1] != len(self.max_indicator_values):
             raise IndexError("Check number of columns of the dataframe")
 
@@ -133,6 +142,23 @@ class Environment():
                 k += 1
 
         return arr
+
+    def revert_flatten_normalise_indicators(self, indicators):
+        """
+        From a flattened and normalised numpy array of indicators
+        go back to a 2-dimensional and not normalised pandas dataframe.
+        """
+        air_quality = indicators[0::4] * self.max_air_quality
+        house_price = indicators[1::4] * self.max_house_price
+        job_accessibility = indicators[2::4] * self.max_job_accessibility
+        greenspace_accessibility = indicators[3::4] * self.max_greenspace_accessibility
+
+        data = {'air_quality': air_quality,
+                'house_price': house_price,
+                'job_accessibility': job_accessibility,
+                'greenspace_accessibility': greenspace_accessibility}
+
+        return pd.DataFrame(data)
 
     def get_indicators(self):
         self.indicators = self.flatten_normalise_indicators(self.eng.indicators)
@@ -170,26 +196,25 @@ class Environment():
         if action not in self.valid_actions:
             raise ValueError(f"{action=} is invalid")
 
-        var_id = action // 2
-        var_row_id = var_id // 4
-        var_col_id = var_id % 4
-        if action % 2 == 0:
+        change, var_row_id, var_col_id = self.action_id_1d_to_2d(action)
+        self.new_variables = self.variables.copy(deep=True)
+        if change == 0:  # Increase the variable with index (var_row_id, var_col_id)
             # the smallest element of variable_values greater than the current variable
             next_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] > self.variables.iloc[var_row_id, var_col_id]].min()
-            self.variables.iloc[var_row_id, var_col_id] = next_variable_value
+            self.new_variables.iloc[var_row_id, var_col_id] = next_variable_value
             self.eng.change((var_row_id, var_col_id), next_variable_value)  # Update the engine
-        elif action % 2 == 1:
+        elif change == 1:  # Decrease the variable with index (var_row_id, var_col_id)
             # the largest element of variable_values less than the current variable
             prev_variable_value = self.variable_values[var_col_id][self.variable_values[var_col_id] < self.variables.iloc[var_row_id, var_col_id]].max()
-            self.variables.iloc[var_row_id, var_col_id] = prev_variable_value
+            self.new_variables.iloc[var_row_id, var_col_id] = prev_variable_value
             self.eng.change((var_row_id, var_col_id), prev_variable_value)  # Update the engine
+        self.variables = self.new_variables
 
         self.get_indicators()
         self.state = self.indicators - self.target
         self.norm = np.linalg.norm(self.state)
         self.done = 1 if self.norm < self.tolerance else 0
         self.valid_actions = self.get_valid_actions()
-
 
         self.episode['variables'].append(self.variables)
         self.episode['indicators'].append(self.indicators)
@@ -199,3 +224,19 @@ class Environment():
         self.episode['norm'].append(self.norm)
         self.episode['action'].append(action)
         self.episode['reward'].append(self.get_reward())
+
+    def action_id_1d_to_2d(self, action):
+        """
+        Input:
+            action: integer
+        Returns:
+            change: integer (0 for increase and 1 for decrease)
+            var_row_id: integer (row id of the variable to change)
+            var_col_id: integer (col id of the variable to change)
+        """
+        change = action % 2
+        var_id = action // 2
+        var_row_id = var_id // 4
+        var_col_id = var_id % 4
+
+        return change, var_row_id, var_col_id
