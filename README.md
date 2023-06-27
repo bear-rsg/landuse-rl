@@ -44,7 +44,7 @@ Login to baskeville:
  
 launch notebook:
  
-<img src="./docs/JupyterLab_launch.png" alt="Juypterlab-screen" width="300" /> 
+<img src="./docs/JupyterLab_Launch.png" alt="Juypterlab-screen" width="300" /> 
  
 
 ```bash
@@ -54,7 +54,11 @@ git clone https://gitlab.bham.ac.uk/hartleys-landuse-turing-msa-1/brainstorming.
 cd brainstorming
 bask_run.sh
 ```
-### Appendix 
+### Appendix
+
+#### Double DQN
+
+<img src="./docs/DQN1.png" alt="class diagram" width="450" /> 
 
 #### Classes for Python
 
