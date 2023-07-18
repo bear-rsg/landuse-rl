@@ -8,19 +8,25 @@ The algorithm is based on the following assumptions.
 
 There are 719 areas based on geographic divisions from Newcastle Upon Tyne, each with four variables of interest:
 
-* Signature Type, int range 0-15
-* Land Use, real range -1..1, discretised into 21 points
-* Green Space, real range 0..1, discretised into 11 points
-* Job Type, real range 0..1, discretised into 11 points 
+* Signature Type, int range 0-15 (`sig_type_interval`, `sig_type_step`)
+* Land Use, real range -1..1, discretised by default into 21 points (`land_use_interval`, `land_use_n_points`)
+* Green Space, real range 0..1, discretised by default into 11 points (`greenspace_interval`, `greenspace_n_points`)
+* Job Type, real range 0..1, discretised by default into 11 points (`job_type_interval`, `job_type_n_points`)
 
-The Turing Institute have provided a Black Box algorithm that can return four indicators of interest. Each indicator is assigned a hard-coded maximum value for normalisation purposes:
+**Note:** If we change those values, then we need to re-train the model.
+
+The Turing Institute have provided a Black Box algorithm that can return four indicators of interest:
 
 * Air Quality
 * House Prices
 * Job Accessibility
 * Green Space Accessibility
 
-Given initial indicators for each area, the algorithm will attempt to find a set of weights for each variable that will maximise the four indicators of interest, by minimising the difference between the initial and final indicators, using a Q Learning approach with a Deep Neural Network (DNN). The reason for using a DNN with Q Learning is so that the DNN can act as a function 'approximator' instead of storing a table of Q values for each state-action pair. This is necessary because the number of states is too large to store in memory and scales exponentially with the number of variables.
+Each indicator is assigned a maximum value for normalisation purposes (`max_air_quality`, `max_house_price`, `max_job_accessibility`, `max_greenspace_accessibility`)
+
+We construct a Deep Neural Network with 3 layers (input, hidden and output). The input layer has `state_size = 719 * 4` neurons (number of areas × number of indicators per area). In the input layer we pass the difference between the current and target indicators after we flatten and normalise them. The output layer has `action_size = 719 * 4 * 2` neurons (number of areas × number of variables per area × number of actions per variable, which is either increase it or decrease it). In the output layer we get the Q value of each action.
+
+Given initial and target indicators for each area, the algorithm will attempt to find a trajectory (a sequence of actions) that will minimise the difference between the initial and target indicators, using a Q Learning approach with a Deep Neural Network (DNN). The reason for using a DNN with Q Learning is so that the DNN can act as a function 'approximator' instead of storing a table of Q values for each state-action pair. This is necessary because the number of states is too large to store in memory and scales exponentially with the number of indicators.
 
 ## The DQN Algorithm
 
@@ -48,9 +54,9 @@ The box labelled `until max episode` describes the sequence that is key to under
     for i_episode in range(1, num_episodes + 1):
 ```
 
-First, a target is selected from one of seven target text files, provided by the Turing Institute. The train function is called using an Epsilon Greedy Policy. The epsilon value decreases over time in order to reduce the amount of exploration and increase the amount of exploitation. This allows the selection of the best action for a given state, based on the current Q values.
+First, a target is selected from one of seven target indicator text files, provided by the Turing Institute. The train function is called using an Epsilon Greedy Policy for the action selection. The epsilon value decreases over time in order to reduce the amount of exploration and increase the amount of exploitation. This allows the selection of the best action for a given state, based on the current Q values.
 
-The `step` function places `Experience` into the replay buffer. The size of the buffer is set to 32 and is designed to break the correlation between consecutive experiences. The `learn` function samples a batch from the replay buffer and updates the Q values using the Bellman equation. The weights and biases of the DQN are updated using mini batch gradient descent across the network. The loop ends when the maximum number of episodes has been reached, or the network is determined to have finished/converged if this happens earlier.
+The `step` function places `Experience` into the replay buffer. The size of the buffer is set to `replay_memory_size` and is designed to break the correlation between consecutive experiences. Every `update_rate` number of steps, the `learn` function samples a batch of `batch_size` experiences from the replay buffer and using mini-batch gradient descent updates the weights and biases of the DQN, using the Bellman equation. The inner loop (`for i_step in range(1, max_num_steps_per_episode + 1)`) ends when the maximum number of steps per episode has been reached, or we have finished/converged to the target, if this happens earlier. The outer loop (`for i_episode in range(1, num_episodes + 1)`) ends when the maximum number of episodes has been reached.
 
 ## Modifying the Algorithm
 
