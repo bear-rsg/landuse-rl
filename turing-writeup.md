@@ -22,7 +22,7 @@ The Turing Institute have provided a Black Box algorithm that can return four in
 * Job Accessibility
 * Green Space Accessibility
 
-Each indicator is assigned a maximum value for normalisation purposes (`max_air_quality`, `max_house_price`, `max_job_accessibility`, `max_greenspace_accessibility`)
+Each indicator is assigned a maximum value for normalisation purposes (`max_air_quality`, `max_house_price`, `max_job_accessibility`, `max_greenspace_accessibility`).
 
 We construct a Deep Neural Network with 3 layers (input, hidden and output). The input layer has `state_size = 719 * 4` neurons (number of areas × number of indicators per area). In the input layer we pass the difference between the current and target indicators after we flatten and normalise them. The output layer has `action_size = 719 * 4 * 2` neurons (number of areas × number of variables per area × number of actions per variable, which is either increase it or decrease it). In the output layer we get the Q value of each action.
 
@@ -56,7 +56,26 @@ The box labelled `until max episode` describes the sequence that is key to under
 
 First, a target is selected from one of seven target indicator text files, provided by the Turing Institute. The train function is called using an Epsilon Greedy Policy for the action selection. The epsilon value decreases over time in order to reduce the amount of exploration and increase the amount of exploitation. This allows the selection of the best action for a given state, based on the current Q values.
 
-The `step` function places `Experience` into the replay buffer. The size of the buffer is set to `replay_memory_size` and is designed to break the correlation between consecutive experiences. Every `update_rate` number of steps, the `learn` function samples a batch of `batch_size` experiences from the replay buffer and using mini-batch gradient descent updates the weights and biases of the DQN, using the Bellman equation. The inner loop (`for i_step in range(1, max_num_steps_per_episode + 1)`) ends when the maximum number of steps per episode has been reached, or we have finished/converged to the target, if this happens earlier. The outer loop (`for i_episode in range(1, num_episodes + 1)`) ends when the maximum number of episodes has been reached.
+The `step` function places `Experience` into the replay buffer. The size of the buffer is set to `replay_memory_size` and is designed to break the correlation between consecutive experiences. Every `update_rate` number of steps, the `learn` function samples a batch of `batch_size` experiences from the replay buffer and using mini-batch gradient descent updates the weights and biases of the DQN, using the Bellman equation. The inner loop (`for i_step in range(1, max_num_steps_per_episode + 1)`) ends when the maximum number of steps per episode has been reached, or we have converged to the target, if this happens earlier. The outer loop (`for i_episode in range(1, num_episodes + 1)`) ends when the maximum number of episodes has been reached.
+
+### Pseudocode
+
+```
+For each episode:
+	Randomly select a target for this episode.
+	
+	For each step in this episode:
+		Using an epsilon-greedy policy select an action.
+		Perform the action, reach a new state and get a reward.
+		Add (state, action, new state, reward) to the replay buffer.
+		Every update_rate steps:
+			Sample a batch_size mini-batch from
+			 the replay buffer.
+			Compute the target Q values using a Double DQN approach
+			 and the Bellman equation.
+			Perform gradient descent.
+			Soft-update the target network parameters.
+```
 
 ## Modifying the Algorithm
 
