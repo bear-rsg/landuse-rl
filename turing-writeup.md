@@ -79,6 +79,8 @@ For each episode:
 
 ## Modifying the Algorithm
 
+The number of areas, output areas, and input areas are hard-coded in the algorithm. These can be edited to suit different sized data, we have only tested on 719 x 4 x 4, but this should work with other sized data sets.
+
 ### Number of Areas
 
 This is set to 719 in the code, to match the data supplied by the Turing Institute. The code can be modified to use a different number of areas, but the data will need to be modified to match.
