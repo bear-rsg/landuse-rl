@@ -79,7 +79,13 @@ For each episode:
 
 ## Modifying the Algorithm
 
-The number of areas, output areas, and input areas are hard-coded in the algorithm. These can be edited to suit different sized data, we have only tested on 719 x 4 x 4, but this should work with other sized data sets.
+The number of areas, output areas, and input areas are hard-coded in the algorithm, these can be edited to suit different sized data. The algorithm assumes 719 areas, so to change look for these values and alter to suit.
+
+```python
+state_size = 719 * 4
+action_size = 719 * 4 * 2
+```
+
 
 ### Number of Areas
 
