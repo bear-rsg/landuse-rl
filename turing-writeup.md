@@ -79,23 +79,8 @@ For each episode:
 
 ## Modifying the Algorithm
 
-The number of areas, output areas, and input areas are hard-coded in the algorithm, these can be edited to suit different sized data. The algorithm assumes 719 areas, so to change look for these values and alter to suit.
+The number of areas are hard-coded in the algorithm, these can be edited to suit different sized data. The algorithm assumes 719 areas, so to change look for these values and alter to suit.
 
 ```python
 state_size = 719 * 4
 action_size = 719 * 4 * 2
-```
-
-
-### Number of Areas
-
-This is set to 719 in the code, to match the data supplied by the Turing Institute. The code can be modified to use a different number of areas, but the data will need to be modified to match.
-
-### Number or Output Areas
-
-This is set to 4 in the code (x 2 to represent increase/decrease), to match the `actions` supplied by the Turing Institute. The code can be modified to use a different number of output areas, but the data will need to be modified to match.
-
-
-### Number of Input Areas
-
-This is set to 4 in the code, to match the `states` supplied by the Turing Institute. The code can be modified to use a different number of input areas, but the data will need to be modified to match.
