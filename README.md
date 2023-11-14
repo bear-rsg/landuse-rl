@@ -1,10 +1,10 @@
 ## Usage on Baskerville
 
-Login to baskeville:
+Login to Baskerville:
 
 <img src="./docs/basklogin.png" alt="login-screen" width="300" /> 
  
-launch notebook:
+Launch notebook:
  
 <img src="./docs/JupyterLab_Launch.png" alt="Juypterlab-screen" width="300" /> 
  
@@ -12,7 +12,7 @@ launch notebook:
 ```bash
 ln -s /bask/projects/v/vjgo8416-geo-com-dem ~/geo-com-dem
 cd ~/geo-com-dem
-git clone https://gitlab.bham.ac.uk/hartleys-landuse-turing-msa-1/brainstorming.git
+git clone https://github.com/bear-rsg/landuse-rl.git
 cd brainstorming
 bask_run.sh
 ```
